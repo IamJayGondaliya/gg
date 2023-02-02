@@ -22,8 +22,11 @@ class GuessingGame extends StatefulWidget {
 class _GuessingGameState extends State<GuessingGame> {
   String animalPath = "assets/images/animals/";
 
-  List<Map<String, dynamic>> animals = [];
+  List nameList = [];
 
+  List<Map<String, dynamic>> animals = [];
+  int nameIndex = 0;
+  int chances = 0;
   Random r = Random();
   late int i;
   String name = "";
@@ -53,6 +56,16 @@ class _GuessingGameState extends State<GuessingGame> {
     ];
 
     i = r.nextInt(animals.length);
+    chances = animals[i]['chances'];
+    nameList = List.generate(animals[i]['name'].length, (index) => null);
+  }
+
+  void reload() {
+setState(() {
+  i = r.nextInt(animals.length);
+  chances = animals[i]['chances'];
+  nameList = List.generate(animals[i]['name'].length, (index) => null);
+});
   }
 
   @override
@@ -80,72 +93,122 @@ class _GuessingGameState extends State<GuessingGame> {
         actions: [
           IconButton(
               onPressed: () {
-                setState(() {
-                  i = r.nextInt(animals.length);
-                });
+                reload();
               },
               icon: Icon(Icons.change_circle_outlined))
         ],
       ),
       body: Center(
-        child: Column(
-          children: [
-            //Chances
-            Expanded(
-              child: Row(
-                children: List.generate(
-                  animals[i]['chances'],
-                  (index) => Icon(
-                    CupertinoIcons.heart_fill,
-                    color: Colors.red,
-                  ),
-                ),
-              ),
-            ),
-            //Animal
-            Expanded(
-              flex: 3,
-              child: Image.asset(animals[i]['image']),
-            ),
-            //Name
-            Expanded(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(
-                  animals[i]['name'].length,
-                  (index) => Container(
-                    height: w * 0.1,
-                    width: w * 0.1,
-                    margin: const EdgeInsets.all(5),
-                    decoration: BoxDecoration(
-                      border: Border.all(),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            //Options
-            Expanded(
-              flex: 2,
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: List.generate(
-                    26,
-                    (index) => Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Image.asset(
-                        "assets/images/pieces/${String.fromCharCode(index + 97)}.png",
-                        width: w * 0.2,
+        child: (chances > 0)
+            //Game
+            ? Column(
+                children: [
+                  //Chances
+                  Expanded(
+                    child: Row(
+                      children: List.generate(
+                        chances,
+                        (index) => Icon(
+                          CupertinoIcons.heart_fill,
+                          color: Colors.red,
+                        ),
                       ),
                     ),
                   ),
-                ),
+                  //Animal
+                  Expanded(
+                    flex: 3,
+                    child: Image.asset(animals[i]['image']),
+                  ),
+                  //Name
+                  Expanded(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(
+                        animals[i]['name'].length,
+                        (index) => Container(
+                          height: w * 0.1,
+                          width: w * 0.1,
+                          margin: const EdgeInsets.all(5),
+                          decoration: BoxDecoration(
+                            image: (nameList[index] == null)
+                                ? null
+                                : DecorationImage(
+                                    image: AssetImage(
+                                        "assets/images/pieces/${nameList[index]}.png"),
+                                  ),
+                            border: Border.all(),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  //Options
+                  Expanded(
+                    flex: 2,
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: List.generate(
+                          26,
+                          (index) => Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: InkWell(
+                              onTap: () {
+                                if (animals[i]['name'][nameIndex] ==
+                                    String.fromCharCode(index + 97)) {
+                                  setState(() {
+                                    nameList[nameIndex] =
+                                        String.fromCharCode(index + 97);
+                                        if(nameIndex < animals[i]['name'].length-1) {
+                                          nameIndex++;
+                                        }
+                                        else {
+                                          reload();
+                                        }
+                                  });
+                                } else {
+                                  setState(() {
+                                    chances -= 1;
+                                  });
+                                }
+                              },
+                              child: Image.asset(
+                                "assets/images/pieces/${String.fromCharCode(index + 97)}.png",
+                                width: w * 0.2,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              )
+            //Lose
+            : Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    "You Lose",
+                    style: TextStyle(
+                      fontSize: 30,
+                      color: Colors.red,
+                    ),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      setState(() {
+                        i = r.nextInt(animals.length);
+                        chances = animals[i]['chances'];
+                        nameIndex = 0;
+                      });
+                    },
+                    child: const Text("RESTART"),
+                  ),
+                ],
               ),
-            ),
-          ],
-        ),
       ),
     );
   }
