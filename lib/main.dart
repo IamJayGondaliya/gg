@@ -31,6 +31,10 @@ class _GuessingGameState extends State<GuessingGame> {
   late int i;
   String name = "";
 
+  int score = 0;
+
+  bool isDone = false;
+
   @override
   void initState() {
     super.initState();
@@ -53,6 +57,30 @@ class _GuessingGameState extends State<GuessingGame> {
         'name': "fox",
         'chances': 3,
       },
+      {
+        'id': 4,
+        'image': "${animalPath}deer.png",
+        'name': "deer",
+        'chances': 3,
+      },
+      {
+        'id': 5,
+        'image': "${animalPath}kangaroo.png",
+        'name': "kangaroo",
+        'chances': 3,
+      },
+      {
+        'id': 6,
+        'image': "${animalPath}parrot.png",
+        'name': "parrot",
+        'chances': 3,
+      },
+      {
+        'id': 7,
+        'image': "${animalPath}squirrel.png",
+        'name': "squirrel",
+        'chances': 3,
+      },
     ];
 
     i = r.nextInt(animals.length);
@@ -61,11 +89,12 @@ class _GuessingGameState extends State<GuessingGame> {
   }
 
   void reload() {
-setState(() {
-  i = r.nextInt(animals.length);
-  chances = animals[i]['chances'];
-  nameList = List.generate(animals[i]['name'].length, (index) => null);
-});
+    setState(() {
+      i = r.nextInt(animals.length);
+      chances = animals[i]['chances'];
+      nameList = List.generate(animals[i]['name'].length, (index) => null);
+      nameIndex = 0;
+    });
   }
 
   @override
@@ -92,105 +121,160 @@ setState(() {
         backgroundColor: Colors.lightBlueAccent,
         actions: [
           IconButton(
-              onPressed: () {
-                reload();
-              },
-              icon: Icon(Icons.change_circle_outlined))
+            onPressed: () {
+              reload();
+            },
+            icon: const Icon(Icons.change_circle_outlined),
+          ),
         ],
       ),
       body: Center(
         child: (chances > 0)
             //Game
-            ? Column(
-                children: [
-                  //Chances
-                  Expanded(
-                    child: Row(
-                      children: List.generate(
-                        chances,
-                        (index) => Icon(
-                          CupertinoIcons.heart_fill,
-                          color: Colors.red,
+            ? Padding(
+              padding: const EdgeInsets.all(15),
+              child: Column(
+                  children: [
+                    //Chances
+                    Expanded(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: List.generate(
+                              chances,
+                              (index) => Icon(
+                                CupertinoIcons.heart_fill,
+                                color: Colors.red,
+                              ),
+                            ),
+                          ),
+                          Text("Score: $score",style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.orange,
+                          ),),
+                        ],
+                      ),
+                    ),
+                    //Animal
+                    Expanded(
+                      flex: 3,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade600,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Stack(
+                          children: [
+                            Image.asset(animals[i]['image']),
+                            Image.asset(
+                              animals[i]['image'],
+                              color: Colors.black.withOpacity(
+                                (1 -
+                                    (1 -
+                                        (1 / ((nameIndex == 0) ? 1 : nameIndex))
+                                            .toDouble())),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
-                  ),
-                  //Animal
-                  Expanded(
-                    flex: 3,
-                    child: Image.asset(animals[i]['image']),
-                  ),
-                  //Name
-                  Expanded(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: List.generate(
-                        animals[i]['name'].length,
-                        (index) => Container(
-                          height: w * 0.1,
-                          width: w * 0.1,
-                          margin: const EdgeInsets.all(5),
-                          decoration: BoxDecoration(
-                            image: (nameList[index] == null)
-                                ? null
-                                : DecorationImage(
-                                    image: AssetImage(
-                                        "assets/images/pieces/${nameList[index]}.png"),
-                                  ),
-                            border: Border.all(),
-                            borderRadius: BorderRadius.circular(10),
+                    //Name
+                    Expanded(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: List.generate(
+                          animals[i]['name'].length,
+                          (index) => Container(
+                            height: w * 0.1,
+                            width: w / (animals[i]['name'].length * 1.5),
+                            margin: const EdgeInsets.all(5),
+                            decoration: BoxDecoration(
+                              image: (nameList[index] == null)
+                                  ? null
+                                  : DecorationImage(
+                                      image: AssetImage(
+                                          "assets/images/pieces/${nameList[index]}.png"),
+                                    ),
+                              border: Border.all(),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                  //Options
-                  Expanded(
-                    flex: 2,
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children: List.generate(
-                          26,
-                          (index) => Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: InkWell(
-                              onTap: () {
-                                if (animals[i]['name'][nameIndex] ==
-                                    String.fromCharCode(index + 97)) {
-                                  setState(() {
-                                    nameList[nameIndex] =
-                                        String.fromCharCode(index + 97);
-                                        if(nameIndex < animals[i]['name'].length-1) {
+                    //Options
+                    Expanded(
+                      flex: 2,
+                      child: Container(
+                        height: 50,
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade300,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: List.generate(
+                              26,
+                              (index) => Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: InkWell(
+                                  onTap: () {
+                                    if (animals[i]['name'][nameIndex] ==
+                                        String.fromCharCode(index + 97)) {
+                                      setState(() {
+                                        nameList[nameIndex] =
+                                            String.fromCharCode(index + 97);
+                                        if (nameIndex <
+                                            animals[i]['name'].length - 1) {
                                           nameIndex++;
+                                        } else {
+                                          isDone = true;
                                         }
-                                        else {
-                                          reload();
-                                        }
-                                  });
-                                } else {
-                                  setState(() {
-                                    chances -= 1;
-                                  });
-                                }
-                              },
-                              child: Image.asset(
-                                "assets/images/pieces/${String.fromCharCode(index + 97)}.png",
-                                width: w * 0.2,
+                                      });
+                                    } else {
+                                      setState(() {
+                                        chances -= 1;
+                                        score-=2;
+                                      });
+                                    }
+                                  },
+                                  child: Image.asset(
+                                    "assets/images/pieces/${String.fromCharCode(index + 97)}.png",
+                                    width: w * 0.2,
+                                  ),
+                                ),
                               ),
                             ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                ],
-              )
+                    Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: ElevatedButton(
+                        onPressed: () {
+                          if (isDone) {
+                            nameIndex++;
+                            score+=10;
+                            reload();
+                          }
+                        },
+                        child: const Text("Next"),
+                      ),
+                    ),
+                  ],
+                ),
+            )
             //Lose
             : Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
+                  const Text(
                     "You Lose",
                     style: TextStyle(
                       fontSize: 30,
@@ -199,11 +283,7 @@ setState(() {
                   ),
                   ElevatedButton(
                     onPressed: () {
-                      setState(() {
-                        i = r.nextInt(animals.length);
-                        chances = animals[i]['chances'];
-                        nameIndex = 0;
-                      });
+                      reload();
                     },
                     child: const Text("RESTART"),
                   ),
